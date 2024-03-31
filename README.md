@@ -4,6 +4,6 @@ Enable subscriptions for Web3 users in your Web2 product. A platform to manage c
 
 ## 🔗 Artifacts
 
-- Application - ...
+- Application - [crypto-subscriptions.vercel.app](https://crypto-subscriptions.vercel.app/)
 - Contracts (Arbitrum Sepolia):
   - ...
