@@ -9,9 +9,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  */
 contract Product is ERC721URIStorage {
     struct Params {
-        uint paymentAmount;
-        address paymentToken;
-        uint paymentPeriod;
+        uint subscriptionCost;
+        address subscriptionToken;
+        uint subscriptionPeriod;
         uint balance;
     }
 
@@ -24,18 +24,18 @@ contract Product is ERC721URIStorage {
     constructor() ERC721("Crypto Subscriptions - Product", "CSP") {}
 
     function create(
-        uint paymentAmount,
-        address paymentToken,
-        uint paymentPeriod,
+        uint subscriptionCost,
+        address subscriptionToken,
+        uint subscriptionPeriod,
         string memory tokenURI
     ) public {
         uint256 tokenId = _nextTokenId++;
         _mint(msg.sender, tokenId);
         _setTokenURI(tokenId, tokenURI);
         _params[tokenId] = Params(
-            paymentAmount,
-            paymentToken,
-            paymentPeriod,
+            subscriptionCost,
+            subscriptionToken,
+            subscriptionPeriod,
             0
         );
     }
@@ -76,7 +76,7 @@ contract Product is ERC721URIStorage {
         require(_ownerOf(tokenId) == msg.sender, "Not owner");
         require(_params[tokenId].balance > 0, "Balance is zero");
         // Send tokens
-        IERC20(_params[tokenId].paymentToken).transfer(
+        IERC20(_params[tokenId].subscriptionToken).transfer(
             msg.sender,
             _params[tokenId].balance
         );
@@ -99,37 +99,37 @@ contract Product is ERC721URIStorage {
     function _makePayment(uint tokenId, address subscriber) internal {
         // Check allowance
         if (
-            IERC20(_params[tokenId].paymentToken).allowance(
+            IERC20(_params[tokenId].subscriptionToken).allowance(
                 subscriber,
                 address(this)
-            ) < _params[tokenId].paymentAmount
+            ) < _params[tokenId].subscriptionCost
         ) {
             return;
         }
         // Check balance
         if (
-            IERC20(_params[tokenId].paymentToken).balanceOf(subscriber) <
-            _params[tokenId].paymentAmount
+            IERC20(_params[tokenId].subscriptionToken).balanceOf(subscriber) <
+            _params[tokenId].subscriptionCost
         ) {
             return;
         }
         // Check last payment date
         if (
             block.timestamp - _payments[tokenId][subscriber] <
-            _params[tokenId].paymentPeriod
+            _params[tokenId].subscriptionPeriod
         ) {
             return;
         }
         // Send tokens to this contract
-        IERC20(_params[tokenId].paymentToken).transferFrom(
+        IERC20(_params[tokenId].subscriptionToken).transferFrom(
             subscriber,
             address(this),
-            _params[tokenId].paymentAmount
+            _params[tokenId].subscriptionCost
         );
         // Update subscriber last payment date
         _payments[tokenId][subscriber] = block.timestamp;
         // Update product balance
-        _params[tokenId].balance += _params[tokenId].paymentAmount;
+        _params[tokenId].balance += _params[tokenId].subscriptionCost;
         // Save payment in Tableland
         // TODO:
         // Send data to webhook
