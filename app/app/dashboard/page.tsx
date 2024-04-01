@@ -1,3 +1,4 @@
+import { ProductList } from "@/components/product-list";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -12,9 +13,12 @@ export default function DashboardPage() {
         </p>
       </div>
       <Separator className="my-6" />
-      <Link href="/dashboard/products/new">
-        <Button>Create Product</Button>
-      </Link>
+      <div className="flex flex-col items-start gap-6">
+        <Link href="/dashboard/products/new">
+          <Button>Create Product</Button>
+        </Link>
+        <ProductList />
+      </div>
     </div>
   );
 }
