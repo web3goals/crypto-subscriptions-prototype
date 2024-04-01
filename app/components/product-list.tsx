@@ -8,7 +8,7 @@ import { addressToShortAddress } from "@/lib/converters";
 import { ProductMetadata } from "@/types/product-metadata";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { formatEther, zeroAddress } from "viem";
+import { erc20Abi, formatEther, zeroAddress } from "viem";
 import { arbitrumSepolia } from "viem/chains";
 import { useAccount, useReadContract } from "wagmi";
 import EntityList from "./entity-list";
@@ -89,6 +89,18 @@ function ProductCardHeader(props: { product: string }) {
   const { data: productMetadata, isLoaded: isProductMetadataLoaded } =
     useMetadataLoader<ProductMetadata>(productMetadataUri);
 
+  /**
+   * Define product subscription token symbol
+   */
+  const {
+    data: productSubscriptionTokenSymbol,
+    isFetched: isProductSubscriptionTokenSymbol,
+  } = useReadContract({
+    address: productParams?.subscriptionToken || zeroAddress,
+    abi: erc20Abi,
+    functionName: "symbol",
+  });
+
   function OpenPageButton() {
     return (
       <a href={`/products/${props.product}`} target="_blank">
@@ -105,7 +117,8 @@ function ProductCardHeader(props: { product: string }) {
   if (
     !isProductParamsFetched ||
     !isProductMetadataUriFetched ||
-    !isProductMetadataLoaded
+    !isProductMetadataLoaded ||
+    !isProductSubscriptionTokenSymbol
   ) {
     return <Skeleton className="w-full h-8" />;
   }
@@ -131,7 +144,7 @@ function ProductCardHeader(props: { product: string }) {
             </p>
             <p className="text-sm break-all">
               {formatEther(productParams?.subscriptionCost || BigInt(0))}{" "}
-              {siteConfig.contracts.chain.nativeCurrency.symbol}
+              {productSubscriptionTokenSymbol}
             </p>
           </div>
           <div className="flex flex-col md:flex-row md:gap-3">
@@ -163,7 +176,7 @@ function ProductCardHeader(props: { product: string }) {
             </p>
             <p className="text-sm break-all">
               {formatEther(productParams?.balance || BigInt(0))}{" "}
-              {siteConfig.contracts.chain.nativeCurrency.symbol}
+              {productSubscriptionTokenSymbol}
             </p>
           </div>
         </div>

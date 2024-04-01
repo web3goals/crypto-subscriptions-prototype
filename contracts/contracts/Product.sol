@@ -40,6 +40,7 @@ contract Product is ERC721URIStorage {
         );
     }
 
+    // TODO: Accept subscriber email?
     function subscribe(uint tokenId) public {
         // Check that the caller is not a subscriber
         require(!_isSubscriber(tokenId, msg.sender), "Already subscribed");
