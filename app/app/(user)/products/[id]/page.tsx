@@ -1,9 +1,9 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Product } from "@/components/product";
 
 export default function ProfilePage({ params }: { params: { id: string } }) {
   return (
     <div className="container py-10 lg:px-80">
-      <Skeleton className="h-4" />
+      <Product product={params.id} />
     </div>
   );
 }
