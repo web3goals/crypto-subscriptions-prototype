@@ -10,7 +10,7 @@ export default function EntityList(props: {
   noEntitiesText: string;
 }) {
   return (
-    <div className="w-full flex flex-col gap-2">
+    <div className="w-full flex flex-col gap-4">
       {/* Not empty list */}
       {props.entities &&
         props.entities.length > 0 &&
