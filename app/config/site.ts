@@ -11,7 +11,9 @@ export const siteConfig = {
   },
   contracts: {
     chain: arbitrumSepolia,
-    product: "0x02008a8DBc938bd7930bf370617065B6B0c1221a" as `0x${string}`,
+    product: "0x1e4712A93beEc0aa26151CF44061eE91DD56f921" as `0x${string}`,
+    productTableId: "478",
+    productTableName: "product_payments",
     usdt: "0x96E6AF6E9e400d0Cd6a4045F122df22BCaAAca59" as `0x${string}`,
   },
 };

@@ -7,6 +7,17 @@ export const productAbi = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "chainid",
+        type: "uint256",
+      },
+    ],
+    name: "ChainNotSupported",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "sender",
         type: "address",
@@ -105,6 +116,22 @@ export const productAbi = [
       },
     ],
     name: "ERC721NonexistentToken",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "length",
+        type: "uint256",
+      },
+    ],
+    name: "StringsInsufficientHexLength",
     type: "error",
   },
   {
@@ -411,6 +438,40 @@ export const productAbi = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes",
+      },
+    ],
+    name: "onERC721Received",
+    outputs: [
+      {
+        internalType: "bytes4",
+        name: "",
+        type: "bytes4",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
@@ -510,6 +571,11 @@ export const productAbi = [
         name: "tokenId",
         type: "uint256",
       },
+      {
+        internalType: "string",
+        name: "email",
+        type: "string",
+      },
     ],
     name: "subscribe",
     outputs: [],
@@ -543,6 +609,19 @@ export const productAbi = [
         internalType: "string",
         name: "",
         type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "tableId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       },
     ],
     stateMutability: "view",

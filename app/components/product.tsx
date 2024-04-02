@@ -4,11 +4,12 @@ import { siteConfig } from "@/config/site";
 import { productAbi } from "@/contracts/abi/product";
 import useMetadataLoader from "@/hooks/useMetadataLoader";
 import { ProductMetadata } from "@/types/product-metadata";
+import { erc20Abi, zeroAddress } from "viem";
 import { useReadContract } from "wagmi";
-import { Skeleton } from "./ui/skeleton";
+import { ProductSubscribeForm } from "./product-subscribe-form";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
-import { erc20Abi, formatEther, zeroAddress } from "viem";
+import { Separator } from "./ui/separator";
+import { Skeleton } from "./ui/skeleton";
 
 export function Product(props: { product: string }) {
   /**
@@ -53,23 +54,24 @@ export function Product(props: { product: string }) {
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <Avatar className="size-32">
+    <div className="flex flex-col items-start">
+      <Avatar className="size-36">
         <AvatarImage src="" alt="Icon" />
         <AvatarFallback className="text-5xl bg-slate-500">
           {productMetadata?.icon}
         </AvatarFallback>
       </Avatar>
-      <p className="text-2xl font-bold mt-4">{productMetadata?.label}</p>
-      <p className="text-nowrap text-muted-foreground mt-1">
+      <p className="text-4xl font-bold mt-8">{productMetadata?.label}</p>
+      <p className="text-xl text-muted-foreground whitespace-pre-line mt- ">
         {productMetadata?.description}
       </p>
-      {/* TODO: Implement button using contract request */}
-      <Button className="mt-8">
-        Subscribe for{" "}
-        {formatEther(productParams?.subscriptionCost || BigInt(0))}{" "}
-        {productSubscriptionTokenSymbol}
-      </Button>
+      <Separator className="my-8" />
+      <ProductSubscribeForm
+        product={props.product}
+        subscriptionCost={productParams?.subscriptionCost || BigInt(0)}
+        subscriptionToken={productParams?.subscriptionToken || zeroAddress}
+        subscriptionTokenSymbol={productSubscriptionTokenSymbol || ""}
+      />
     </div>
   );
 }

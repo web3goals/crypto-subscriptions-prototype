@@ -34,7 +34,6 @@ export function ProductList() {
         `https://arb-sepolia.g.alchemy.com/nft/v3/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}/getNFTsForOwner?owner=${address}&contractAddresses[]=${siteConfig.contracts.product}&withMetadata=false&pageSize=100`
       );
       if (data) {
-        console.log(data);
         setProducts(data.ownedNfts?.map((nft: any) => nft.tokenId));
       }
     } catch (error: any) {
@@ -137,7 +136,7 @@ function ProductCardHeader(props: { product: string }) {
       {/* Content */}
       <div className="w-full">
         <p className="text-xl font-bold">{productMetadata?.label}</p>
-        <div className="flex flex-col gap-2 mt-4">
+        <div className="flex flex-col gap-3 mt-4">
           <div className="flex flex-col md:flex-row md:gap-3">
             <p className="min-w-[140px] text-sm text-muted-foreground">
               Subscription cost:
@@ -163,6 +162,7 @@ function ProductCardHeader(props: { product: string }) {
               <a
                 href={`${siteConfig.contracts.chain.blockExplorers.default.url}/address/${productParams?.subscriptionToken}`}
                 target="_blank"
+                className="underline underline-offset-4"
               >
                 {addressToShortAddress(
                   productParams?.subscriptionToken || zeroAddress
@@ -189,8 +189,55 @@ function ProductCardHeader(props: { product: string }) {
   );
 }
 
-// TODO: Load subscribers using Tableland
 function ProductCardSubscribers(props: { product: string }) {
+  const { handleError } = useError();
+  const [subscriberPayments, setSubscriberPayments] = useState<
+    Map<string, number[]> | undefined
+  >();
+  const [subscriberEmails, setSubscriberEmails] = useState<
+    Map<string, string> | undefined
+  >();
+
+  async function loadSubscribers() {
+    try {
+      // Load data from Tableland
+      const url = "https://testnets.tableland.network";
+      const chain = siteConfig.contracts.chain.id;
+      const tableId = siteConfig.contracts.productTableId;
+      const tableName = siteConfig.contracts.productTableName;
+      const statement = `select%20%2A%20from%20${tableName}_${chain}_${tableId}%20where%20product%3D${props.product}`;
+      const { data } = await axios.get(
+        `${url}/api/v1/query?statement=${statement}`
+      );
+      // Parse loaded data
+      const subscriberPayments = new Map<string, number[]>();
+      const subscriberEmails = new Map<string, string>();
+      for (let i = 0; i < data.length; i++) {
+        // Set payments
+        const payments: number[] =
+          subscriberPayments.get(data[i].subscriber_address) || [];
+        payments.push(data[i].date);
+        subscriberPayments.set(data[i].subscriber_address, payments);
+        // Set email
+        if (data[i].subscriber_email) {
+          subscriberEmails.set(
+            data[i].subscriber_address,
+            data[i].subscriber_email
+          );
+        }
+      }
+      setSubscriberPayments(subscriberPayments);
+      setSubscriberEmails(subscriberEmails);
+    } catch (error: any) {
+      handleError(error, true);
+    }
+  }
+
+  useEffect(() => {
+    loadSubscribers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="w-full flex flex-row gap-4">
       {/* Icon */}
@@ -202,8 +249,37 @@ function ProductCardSubscribers(props: { product: string }) {
       </div>
       {/* Content */}
       <div className="w-full">
-        <p className="text-base font-bold">Subscribers</p>
-        <Skeleton className="w-full h-8 mt-4" />
+        <p className="text-base font-bold">Subscribers & Payments</p>
+        {subscriberPayments && subscriberEmails ? (
+          <div className="flex flex-col gap-4 mt-4">
+            {Array.from(subscriberPayments.keys()).map((subscriber, index) => (
+              <div key={index}>
+                <p className="text-sm">
+                  {subscriberEmails.get(subscriber)} ·{" "}
+                  <a
+                    href={`${siteConfig.contracts.chain.blockExplorers.default.url}/address/${subscriber}`}
+                    target="_blank"
+                    className="underline underline-offset-4"
+                  >
+                    {addressToShortAddress(subscriber)}
+                  </a>
+                </p>
+                {subscriberPayments
+                  .get(subscriber)
+                  ?.map((payment, paymentIndex) => (
+                    <p
+                      key={paymentIndex}
+                      className="text-xs text-muted-foreground mt-2"
+                    >
+                      ✅ {new Date(payment * 1000).toLocaleString()}
+                    </p>
+                  ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Skeleton className="w-full h-8 mt-4" />
+        )}
       </div>
     </div>
   );
