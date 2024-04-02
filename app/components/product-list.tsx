@@ -8,14 +8,21 @@ import { addressToShortAddress } from "@/lib/converters";
 import { ProductMetadata } from "@/types/product-metadata";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { erc20Abi, formatEther, zeroAddress } from "viem";
+import { erc20Abi, formatEther, parseEther, zeroAddress } from "viem";
 import { arbitrumSepolia } from "viem/chains";
-import { useAccount, useReadContract } from "wagmi";
+import {
+  useAccount,
+  usePublicClient,
+  useReadContract,
+  useWalletClient,
+} from "wagmi";
 import EntityList from "./entity-list";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { Skeleton } from "./ui/skeleton";
+import { toast } from "./ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 export function ProductList() {
   const { handleError } = useError();
@@ -71,13 +78,16 @@ function ProductCardHeader(props: { product: string }) {
   /**
    * Define product data
    */
-  const { data: productParams, isFetched: isProductParamsFetched } =
-    useReadContract({
-      address: siteConfig.contracts.product,
-      abi: productAbi,
-      functionName: "getParams",
-      args: [BigInt(props.product)],
-    });
+  const {
+    data: productParams,
+    isFetched: isProductParamsFetched,
+    refetch: refetchProductParams,
+  } = useReadContract({
+    address: siteConfig.contracts.product,
+    abi: productAbi,
+    functionName: "getParams",
+    args: [BigInt(props.product)],
+  });
   const { data: productMetadataUri, isFetched: isProductMetadataUriFetched } =
     useReadContract({
       address: siteConfig.contracts.product,
@@ -108,9 +118,56 @@ function ProductCardHeader(props: { product: string }) {
     );
   }
 
-  // TODO: Implement button using smart contract request
   function WithdrawButton() {
-    return <Button variant="outline">Withdraw Balance</Button>;
+    const { handleError } = useError();
+    const publicClient = usePublicClient();
+    const { data: walletClient } = useWalletClient();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    async function onSubmit() {
+      try {
+        setIsSubmitting(true);
+        // Check clients
+        if (!publicClient) {
+          throw new Error("Public client is not ready");
+        }
+        if (!walletClient) {
+          throw new Error("Wallet is not connected");
+        }
+        // Send request
+        const { request } = await publicClient.simulateContract({
+          account: walletClient.account.address,
+          address: siteConfig.contracts.product,
+          abi: productAbi,
+          functionName: "withdraw",
+          args: [BigInt(props.product)],
+        });
+        const txHash = await walletClient.writeContract(request);
+        await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+        // Show success message
+        refetchProductParams();
+        toast({
+          title: "Withdrawn successfully 👌",
+        });
+      } catch (error: any) {
+        handleError(error, true);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+
+    return (
+      <Button
+        variant="outline"
+        disabled={isSubmitting}
+        onClick={() => onSubmit()}
+      >
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Withdraw Balance
+      </Button>
+    );
   }
 
   if (
