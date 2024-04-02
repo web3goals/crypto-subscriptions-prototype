@@ -208,7 +208,16 @@ function ProductCardHeader(props: { product: string }) {
               Subscription period:
             </p>
             <p className="text-sm break-all">
-              {productParams?.subscriptionPeriod?.toString()} seconds
+              {productParams?.subscriptionPeriod === BigInt(60 * 10)
+                ? "10 minutes"
+                : productParams?.subscriptionPeriod === BigInt(24 * 60 * 60)
+                ? "1 day"
+                : productParams?.subscriptionPeriod === BigInt(7 * 24 * 60 * 60)
+                ? "7 days"
+                : productParams?.subscriptionPeriod ===
+                  BigInt(30 * 24 * 60 * 60)
+                ? "30 days"
+                : `${productParams?.subscriptionPeriod?.toString()} seconds`}
             </p>
           </div>
           <div className="flex flex-col md:flex-row md:gap-3">
@@ -309,6 +318,9 @@ function ProductCardSubscribers(props: { product: string }) {
         <p className="text-base font-bold">Subscribers & Payments</p>
         {subscriberPayments && subscriberEmails ? (
           <div className="flex flex-col gap-4 mt-4">
+            {subscriberPayments.size === 0 && (
+              <p className="text-sm text-muted-foreground">No subscribers 😐</p>
+            )}
             {Array.from(subscriberPayments.keys()).map((subscriber, index) => (
               <div key={index}>
                 <p className="text-sm">

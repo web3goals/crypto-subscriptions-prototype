@@ -32,6 +32,7 @@ export function ProductSubscribeForm(props: {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 
   const formSchema = z.object({
     email: z.string().email(),
@@ -88,6 +89,7 @@ export function ProductSubscribeForm(props: {
         title: "Subscribed successfully 👌",
       });
       setIsFormSubmitting(false);
+      setIsFormSubmitted(true);
     } catch (error: any) {
       handleError(error, true);
       setIsFormSubmitting(false);
@@ -104,13 +106,17 @@ export function ProductSubscribeForm(props: {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="alice@company.com" {...field} />
+                <Input
+                  placeholder="alice@company.com"
+                  disabled={isFormSubmitting || isFormSubmitted}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isFormSubmitting}>
+        <Button type="submit" disabled={isFormSubmitting || isFormSubmitted}>
           {isFormSubmitting && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           )}
