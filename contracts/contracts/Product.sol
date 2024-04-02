@@ -2,12 +2,16 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@tableland/evm/contracts/utils/TablelandDeployments.sol";
+import "@tableland/evm/contracts/utils/SQLHelpers.sol";
 
 /**
  * @notice A contract that stores products and subsribers.
  */
-contract Product is ERC721URIStorage {
+contract Product is ERC721URIStorage, ERC721Holder {
     struct Params {
         uint subscriptionCost;
         address subscriptionToken;
@@ -20,8 +24,23 @@ contract Product is ERC721URIStorage {
     mapping(uint tokenId => address[] subscriber) private _subscribers;
     mapping(uint tokenId => mapping(address subscriber => uint lastPaymentDate))
         private _payments;
+    uint256 public tableId;
+    string private constant _TABLE_PREFIX = "product_payments";
 
-    constructor() ERC721("Crypto Subscriptions - Product", "CSP") {}
+    constructor() ERC721("Crypto Subscriptions - Product", "CSP") {
+        // Create table
+        tableId = TablelandDeployments.get().create(
+            address(this),
+            SQLHelpers.toCreateFromSchema(
+                "id integer primary key,"
+                "product integer,"
+                "date integer,"
+                "subscriber_address text,"
+                "subscriber_email text",
+                _TABLE_PREFIX
+            )
+        );
+    }
 
     function create(
         uint subscriptionCost,
@@ -40,14 +59,13 @@ contract Product is ERC721URIStorage {
         );
     }
 
-    // TODO: Accept subscriber email?
-    function subscribe(uint tokenId) public {
+    function subscribe(uint tokenId, string memory email) public {
         // Check that the caller is not a subscriber
         require(!_isSubscriber(tokenId, msg.sender), "Already subscribed");
         // Save subscriber
         _subscribers[tokenId].push(msg.sender);
         // Make the first payment
-        _makePayment(tokenId, msg.sender);
+        _makePayment(tokenId, msg.sender, email);
     }
 
     function processSubscribers() public {
@@ -97,11 +115,15 @@ contract Product is ERC721URIStorage {
         return false;
     }
 
-    function _makePayment(uint tokenId, address subscriber) internal {
+    function _makePayment(
+        uint tokenId,
+        address subscriberAddress,
+        string memory subscriberEmail
+    ) internal {
         // Check allowance
         if (
             IERC20(_params[tokenId].subscriptionToken).allowance(
-                subscriber,
+                subscriberAddress,
                 address(this)
             ) < _params[tokenId].subscriptionCost
         ) {
@@ -109,37 +131,55 @@ contract Product is ERC721URIStorage {
         }
         // Check balance
         if (
-            IERC20(_params[tokenId].subscriptionToken).balanceOf(subscriber) <
-            _params[tokenId].subscriptionCost
+            IERC20(_params[tokenId].subscriptionToken).balanceOf(
+                subscriberAddress
+            ) < _params[tokenId].subscriptionCost
         ) {
             return;
         }
         // Check last payment date
         if (
-            block.timestamp - _payments[tokenId][subscriber] <
+            block.timestamp - _payments[tokenId][subscriberAddress] <
             _params[tokenId].subscriptionPeriod
         ) {
             return;
         }
         // Send tokens to this contract
         IERC20(_params[tokenId].subscriptionToken).transferFrom(
-            subscriber,
+            subscriberAddress,
             address(this),
             _params[tokenId].subscriptionCost
         );
         // Update subscriber last payment date
-        _payments[tokenId][subscriber] = block.timestamp;
+        _payments[tokenId][subscriberAddress] = block.timestamp;
         // Update product balance
         _params[tokenId].balance += _params[tokenId].subscriptionCost;
         // Save payment in Tableland
-        // TODO:
+        TablelandDeployments.get().mutate(
+            address(this),
+            tableId,
+            SQLHelpers.toInsert(
+                _TABLE_PREFIX,
+                tableId,
+                "product,date,subscriber_address,subscriber_email",
+                string.concat(
+                    Strings.toString(tokenId),
+                    ",",
+                    Strings.toString(block.timestamp),
+                    ",",
+                    SQLHelpers.quote(Strings.toHexString(subscriberAddress)),
+                    ",",
+                    SQLHelpers.quote(subscriberEmail)
+                )
+            )
+        );
         // Send data to webhook
         // TODO:
     }
 
     function _processSubscribers(uint tokenId) internal {
         for (uint256 i = 0; i < _subscribers[tokenId].length; i++) {
-            _makePayment(tokenId, _subscribers[tokenId][i]);
+            _makePayment(tokenId, _subscribers[tokenId][i], "");
         }
     }
 }

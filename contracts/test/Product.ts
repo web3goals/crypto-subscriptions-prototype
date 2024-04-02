@@ -5,6 +5,7 @@ import {
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
+// TODO: Fix tests to support or ignore Tableland
 describe("Product", function () {
   async function initFixture() {
     // Get signers
@@ -57,7 +58,7 @@ describe("Product", function () {
     ).to.be.not.reverted;
     // Subscribe
     await expect(
-      productContract.connect(userTwo).subscribe(productId)
+      productContract.connect(userTwo).subscribe(productId, "test@test.com")
     ).to.changeTokenBalances(
       usdTokenContract,
       [userTwo, productContract],

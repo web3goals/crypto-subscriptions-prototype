@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@tableland/hardhat": "^0.0.8",
+    "axios": "^1.6.8",
     "dotenv": "^16.4.5",
     "hardhat": "^2.22.2"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.2"
+    "@openzeppelin/contracts": "^5.0.2",
+    "@tableland/evm": "^5.0.0",
+    "erc721a-upgradeable": "^4.3.0"
   }
 }
