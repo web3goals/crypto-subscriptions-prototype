@@ -62,7 +62,7 @@ export function Product(props: { product: string }) {
         </AvatarFallback>
       </Avatar>
       <p className="text-4xl font-bold mt-8">{productMetadata?.label}</p>
-      <p className="text-xl text-muted-foreground whitespace-pre-line mt- ">
+      <p className="text-xl text-muted-foreground whitespace-pre-line mt-3">
         {productMetadata?.description}
       </p>
       <Separator className="my-8" />
