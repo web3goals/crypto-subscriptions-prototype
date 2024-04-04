@@ -8,6 +8,7 @@
 - Run sandbox script - `npx hardhat run scripts/sandbox.ts --network arbitrumSepolia`
 - Verify contract - `npx hardhat verify --network arbitrumSepolia 0x0000000000000000000000000000000000000000`
 - Clean ignition deployment - `npx hardhat ignition wipe chain-421614 ProductModule#Product`
+- Generate a file with flatten constract code - `npx hardhat flatten contracts/Product.sol > contracts/Product_flat.sol`
 
 ## How to test integration with Tableland
 
